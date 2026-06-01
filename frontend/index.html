@@ -295,6 +295,10 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       </div>
     </div>
     <div class="topbar-right">
+      <button id="info-btn" class="badge" type="button" style="cursor:pointer;border-color:var(--purple-dim);color:var(--text);background:var(--purple-glow);">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        Hackathon Context
+      </button>
       <div id="agent-badge" class="badge"><span class="dot"></span>Awaiting input</div>
       <div class="conf-wrap">
         <span class="conf-label">confidence</span>
@@ -411,6 +415,19 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   </div><!-- /.body -->
 </div><!-- /.app -->
 
+<div id="info-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(4px);z-index:999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);width:min(90vw,500px);padding:24px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">
+    <h2 style="font-size:18px;margin-bottom:16px;color:var(--text);">FAIC 2026 Evaluation Alignment</h2>
+    <div style="font-size:13px;color:var(--muted);line-height:1.6;display:flex;flex-direction:column;gap:12px;">
+      <p><strong style="color:var(--text);">Model Innovation:</strong> A two-stage Llama 3.1 pipeline classifies intent first, then routes the message to a specialized worker.</p>
+      <p><strong style="color:var(--text);">Real-World Applicability:</strong> The app mirrors a real support flow by handling sales, troubleshooting, refunds, and human escalation.</p>
+      <p><strong style="color:var(--text);">Technical Architecture:</strong> FastAPI backend, clean JSON contract, responsive vanilla frontend, Markdown rendering, and env-based config.</p>
+      <p><strong style="color:var(--text);">Documentation Clarity:</strong> README includes live links, architecture flow, setup, and test prompts for judges.</p>
+    </div>
+    <button id="close-modal" type="button" style="margin-top:24px;width:100%;padding:10px;border-radius:var(--r-sm);background:var(--bg3);border:1px solid var(--border);color:var(--text);cursor:pointer;font-weight:600;">Close</button>
+  </div>
+</div>
+
 <script>
 const chatLog   = document.getElementById('chat-log');
 const input     = document.getElementById('user-input');
@@ -423,6 +440,9 @@ const chips     = document.querySelectorAll('#chip-list .chip');
 const traceContainer = document.getElementById('trace-container');
 const statMsgs  = document.getElementById('stat-msgs');
 const statConf  = document.getElementById('stat-conf');
+const infoBtn = document.getElementById('info-btn');
+const infoModal = document.getElementById('info-modal');
+const closeModal = document.getElementById('close-modal');
 
 // Default to local backend, then try to override from frontend/.env
 let API_URL   = window.FLOWAI_API_URL || 'https://flowai-w1rx.onrender.com/chat';
@@ -624,6 +644,9 @@ async function send(override) {
 sendBtn.addEventListener('click', () => send());
 input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
 chips.forEach(c => c.addEventListener('click', () => send(c.dataset.prompt)));
+infoBtn.addEventListener('click', () => { infoModal.style.display = 'flex'; });
+closeModal.addEventListener('click', () => { infoModal.style.display = 'none'; });
+infoModal.addEventListener('click', (e) => { if (e.target === infoModal) infoModal.style.display = 'none'; });
 
 /* spin keyframe for loading icon */
 const style = document.createElement('style');

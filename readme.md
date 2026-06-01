@@ -40,6 +40,12 @@ User Input -> FastAPI Backend -> Llama 3.1 Classifier
 - A `View Architecture Docs` link jumps straight to the full GitHub README.
 - The chat bubbles support Markdown, so bold text and bullet lists render properly.
 
+## Hackathon Evaluation Alignment
+- **Model Innovation:** FlowAI uses a two-stage Llama 3.1 pipeline with intent classification followed by specialized routing.
+- **Real-World Applicability:** The assistant handles realistic business flows like pricing, troubleshooting, refunds, and human escalation.
+- **Technical Architecture:** The project uses FastAPI, a clean `/chat` JSON API, env-based configuration, and a responsive vanilla frontend.
+- **Documentation Clarity:** The README includes live links, architecture flow, setup instructions, and judge-facing test cases.
+
 ## Verification & Test Cases
 Use these prompts during the demo so judges can test each route quickly:
 1. `Sales` test: "Can you recommend the best plan for a growing business?"
