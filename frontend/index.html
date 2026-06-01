@@ -410,7 +410,7 @@ const statMsgs  = document.getElementById('stat-msgs');
 const statConf  = document.getElementById('stat-conf');
 
 // Default to local backend, then try to override from frontend/.env
-let API_URL   = window.FLOWAI_API_URL || 'http://localhost:8000/chat';
+let API_URL   = window.FLOWAI_API_URL || 'https://flowai-un6h.onrender.com/chat';
 let busy = false, typingEl = null;
 
 // Telemetry State
