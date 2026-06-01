@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="FAIC 2026 Hackathon Submission - Multi-Agent Router">
+<title>FlowAI — Intent-Aware Assistant</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── reset & tokens ──────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0d10;
+  --bg2:#13141a;
+  --bg3:#1a1c24;
+  --bg4:#22242f;
+  --border:#ffffff0f;
+  --border2:#ffffff18;
+  --border3:#ffffff28;
+  --text:#f0f0f4;
+  --muted:#8a8fa8;
+  --muted2:#5a5f78;
+  --purple:#7c6ef5;
+  --purple-dim:#3d3780;
+  --purple-glow:rgba(124,110,245,.18);
+  --teal:#34d4b0;
+  --teal-dim:#1a6b5a;
+  --orange:#f5834a;
+  --orange-dim:#7a3e1f;
+  --blue:#4a9cf5;
+  --blue-dim:#1e4a7a;
+  --red:#f56060;
+  --green:#52d97a;
+  --font:'DM Sans',system-ui,sans-serif;
+  --mono:'DM Mono',monospace;
+  --r-sm:8px;
+  --r-md:12px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
+
+/* ── scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border3);border-radius:99px}
+
+/* ── layout ──────────────────────────────────────────────────────────────── */
+.app{display:grid;grid-template-rows:56px 1fr;height:100vh;height:100dvh}
+.body{display:grid;grid-template-columns:240px 1fr;overflow:hidden}
+
+/* ── topbar ──────────────────────────────────────────────────────────────── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  gap:12px;
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{
+  width:32px;height:32px;border-radius:var(--r-sm);
+  background:linear-gradient(135deg,var(--purple),var(--teal));
+  display:grid;place-items:center;
+}
+.brand-mark svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.brand-name{font-size:14px;font-weight:600;letter-spacing:-.02em}
+.brand-sub{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 10px;border-radius:99px;
+  font-size:11.5px;font-weight:500;font-family:var(--mono);
+  border:1px solid var(--border2);background:var(--bg3);color:var(--muted);
+  white-space:nowrap;transition:all .25s;
+}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.badge.sales{color:var(--purple);border-color:var(--purple-dim);background:rgba(124,110,245,.08)}
+.badge.support{color:var(--blue);border-color:var(--blue-dim);background:rgba(74,156,245,.08)}
+.badge.care{color:var(--teal);border-color:var(--teal-dim);background:rgba(52,212,176,.08)}
+.conf-wrap{display:flex;align-items:center;gap:8px}
+.conf-label{font-size:11px;color:var(--muted2);font-family:var(--mono);white-space:nowrap}
+.conf-track{width:80px;height:4px;border-radius:99px;background:var(--bg4);overflow:hidden}
+.conf-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--purple),var(--teal));transition:width .4s cubic-bezier(.4,0,.2,1)}
+.conf-num{font-size:11px;font-family:var(--mono);color:var(--text);min-width:26px;text-align:right}
+
+/* ── sidebar ─────────────────────────────────────────────────────────────── */
+.sidebar{
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;
+}
+.sidebar-section{padding:14px 12px 6px}
+.sidebar-label{
+  font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted2);padding:0 6px;margin-bottom:6px;
+}
+.chip-list{display:flex;flex-direction:column;gap:2px}
+.chip{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:var(--r-md);
+  background:transparent;border:1px solid transparent;
+  cursor:pointer;font:inherit;font-size:13px;color:var(--muted);
+  text-align:left;transition:all .15s;width:100%;
+}
+.chip:hover{background:var(--bg3);border-color:var(--border2);color:var(--text)}
+.chip:disabled{opacity:.4;cursor:not-allowed}
+.chip-icon{
+  width:28px;height:28px;border-radius:var(--r-sm);
+  display:grid;place-items:center;flex-shrink:0;
+}
+.chip-icon svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.chip.s .chip-icon{background:rgba(124,110,245,.12);color:var(--purple)}
+.chip.t .chip-icon{background:rgba(74,156,245,.12);color:var(--blue)}
+.chip.c .chip-icon{background:rgba(52,212,176,.12);color:var(--teal)}
+.sidebar-divider{height:1px;background:var(--border);margin:10px 12px}
+
+/* Routing Trace */
+.trace-scroll {
+  display: flex; align-items: center; gap: 4px; padding: 6px; 
+  overflow-x: auto; white-space: nowrap; margin-bottom: 4px;
+}
+.trace-scroll .agent-tag { margin-bottom: 0; }
+.trace-arrow { color: var(--muted2); display: flex; align-items: center; }
+
+/* Stats */
+.sidebar-stats{padding:12px 16px;margin-top:auto}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px}
+.stat-row span:first-child{color:var(--muted)}
+.stat-row span:last-child{color:var(--text);font-family:var(--mono);font-size:11px}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── chat area ───────────────────────────────────────────────────────────── */
+.chat-area{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+
+.hero-banner {
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  padding: 12px 24px; font-size: 12.5px; color: var(--muted); text-align: center;
+  letter-spacing: 0.01em; line-height: 1.5;
+}
+.hero-banner strong { color: var(--text); font-weight: 600; }
+
+.chat-log{
+  flex:1;overflow-y:auto;
+  padding:20px 24px;
+  display:flex;flex-direction:column;gap:14px;
+  scroll-behavior:smooth;
+}
+.empty{
+  margin:auto;text-align:center;max-width:280px;
+  color:var(--muted);
+}
+.empty-glyph{
+  width:56px;height:56px;border-radius:var(--r-xl);
+  background:linear-gradient(135deg,rgba(124,110,245,.15),rgba(52,212,176,.12));
+  border:1px solid var(--border2);
+  display:grid;place-items:center;margin:0 auto 16px;
+}
+.empty-glyph svg{width:24px;height:24px;fill:none;stroke:var(--purple);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.empty h3{font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px}
+.empty p{font-size:12.5px;line-height:1.7;color:var(--muted)}
+
+/* ── messages ────────────────────────────────────────────────────────────── */
+.msg{display:flex;gap:10px;align-items:flex-end;animation:rise .2s ease both}
+.msg.user{flex-direction:row-reverse}
+.av{width:30px;height:30px;border-radius:var(--r-sm);display:grid;place-items:center;flex-shrink:0;font-size:10px;font-weight:600;font-family:var(--mono);letter-spacing:.04em}
+.av.bot{background:linear-gradient(135deg,var(--purple-dim),rgba(52,212,176,.25));color:var(--purple);border:1px solid var(--border2)}
+.av.user{background:var(--bg4);color:var(--muted);border:1px solid var(--border2)}
+.bubble-wrap{max-width:min(76%,540px);display:flex;flex-direction:column}
+.msg.user .bubble-wrap{align-items:flex-end}
+.bubble{
+  padding:11px 14px;
+  border-radius:14px;
+  font-size:13.5px;line-height:1.7;
+  border:1px solid var(--border);
+}
+.msg.bot .bubble{
+  background:var(--bg2);border-color:var(--border2);
+  border-bottom-left-radius:4px;
+}
+.msg.user .bubble{
+  background:var(--bg3);border-color:var(--border3);
+  border-bottom-right-radius:4px;
+}
+.bubble p{margin-bottom:6px}
+.bubble p:last-child{margin-bottom:0}
+.bubble ul,.bubble ol{margin:6px 0 6px 18px}
+.bubble li{margin-bottom:3px}
+.bubble strong{font-weight:600;color:var(--text)}
+.bubble code{font-family:var(--mono);font-size:12px;background:var(--bg4);padding:1px 5px;border-radius:4px;color:var(--teal)}
+.msg-meta{font-size:11px;color:var(--muted2);margin-top:5px;padding:0 2px;font-family:var(--mono)}
+.agent-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:500;font-family:var(--mono);
+  padding:2px 7px;border-radius:99px;margin-bottom:4px;
+  border:1px solid var(--border);color:var(--muted);
+}
+.agent-tag.sales{color:var(--purple);border-color:var(--purple-dim)}
+.agent-tag.support{color:var(--blue);border-color:var(--blue-dim)}
+.agent-tag.care{color:var(--teal);border-color:var(--teal-dim)}
+
+/* ── typing ──────────────────────────────────────────────────────────────── */
+.typing-dots{display:inline-flex;gap:4px;align-items:center;padding:4px 2px}
+.typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--muted2);animation:dot 1s infinite ease-in-out}
+.typing-dots span:nth-child(2){animation-delay:.14s}
+.typing-dots span:nth-child(3){animation-delay:.28s}
+@keyframes dot{0%,80%,100%{transform:translateY(0);opacity:.3}40%{transform:translateY(-4px);opacity:1}}
+
+/* ── composer ────────────────────────────────────────────────────────────── */
+.composer{
+  padding:12px 20px 18px;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+.composer-inner{display:flex;gap:10px;align-items:center}
+.composer-input{
+  flex:1;min-width:0;
+  padding:10px 15px;
+  border-radius:var(--r-lg);
+  border:1px solid var(--border2);
+  background:var(--bg3);
+  color:var(--text);
+  font:inherit;font-size:13.5px;
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.composer-input::placeholder{color:var(--muted2)}
+.composer-input:focus{border-color:var(--purple-dim);box-shadow:0 0 0 3px var(--purple-glow)}
+.composer-input:disabled{opacity:.45;cursor:not-allowed}
+.send-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:10px 18px;
+  border-radius:var(--r-lg);border:none;
+  background:var(--purple);color:#fff;
+  font:inherit;font-size:13.5px;font-weight:500;
+  cursor:pointer;white-space:nowrap;flex-shrink:0;
+  box-shadow:0 4px 20px rgba(124,110,245,.3);
+  transition:opacity .15s,transform .1s,box-shadow .15s;
+}
+.send-btn:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 6px 24px rgba(124,110,245,.4)}
+.send-btn:active{transform:scale(.97)}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.send-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── animations ──────────────────────────────────────────────────────────── */
+@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── sr-only ─────────────────────────────────────────────────────────────── */
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+/* ── responsive ──────────────────────────────────────────────────────────── */
+@media(max-width:700px){
+  .body{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .sidebar{
+    flex-direction:row;overflow-x:auto;overflow-y:hidden;
+    border-right:none;border-bottom:1px solid var(--border);
+    padding:10px 12px;gap:6px;align-items:center;
+  }
+  .sidebar-section{padding:0;display:flex;gap:6px;align-items:center;flex-shrink:0}
+  .sidebar-label,.sidebar-divider,.sidebar-stats{display:none}
+  .chip-list{flex-direction:row;gap:6px}
+  .chip{padding:7px 12px;border:1px solid var(--border2);background:var(--bg3);flex-direction:column;gap:4px;align-items:center;text-align:center;font-size:11px;border-radius:var(--r-md);white-space:nowrap}
+  .chip-icon{width:24px;height:24px}
+  .topbar{padding:0 14px}
+  .brand-sub,.conf-wrap{display:none}
+  .chat-log{padding:14px 14px}
+  .composer{padding:10px 14px 16px}
+  .composer-inner{gap:8px}
+  .badge{font-size:11px;padding:4px 8px}
+}
+@media(max-width:400px){
+  .send-btn span{display:none}
+  .send-btn{padding:10px 13px}
+  .hero-banner{font-size:11px; padding:10px;}
+}
+</style>
+</head>
+<body>
+<span class="sr-only"><h2>FlowAI — intent-aware business assistant</h2></span>
+<div class="app">
+
+  <!-- topbar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 16 16"><path d="M2 8a6 6 0 1 0 12 0A6 6 0 0 0 2 8z"/><path d="M8 5v3l2 2"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">FlowAI</div>
+        <div class="brand-sub">intent-routing console</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div id="agent-badge" class="badge"><span class="dot"></span>Awaiting input</div>
+      <div class="conf-wrap">
+        <span class="conf-label">confidence</span>
+        <div class="conf-track"><div id="conf-fill" class="conf-fill" style="width:0%"></div></div>
+        <span id="conf-num" class="conf-num">–%</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="body">
+
+    <!-- sidebar -->
+    <aside class="sidebar" aria-label="Quick prompts">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Try a prompt</div>
+        <div class="chip-list" id="chip-list">
+          <button class="chip s" type="button" data-prompt="Can you recommend the best plan for a growing business?">
+            <div class="chip-icon" aria-hidden="true"><svg viewBox="0 0 16 16"><polyline points="1 11 5 7 9 9 15 3"/><polyline points="11 3 15 3 15 7"/></svg></div>
+            Sales inquiry
+          </button>
+          <button class="chip t" type="button" data-prompt="I'm seeing an error when I try to connect my account.">
+            <div class="chip-icon" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l1.5 1.5"/></svg></div>
+            Tech support
+          </button>
+          <button class="chip c" type="button" data-prompt="I'd like a refund because the experience was disappointing.">
+            <div class="chip-icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 14s-5-3.5-5-7a5 5 0 0 1 10 0c0 3.5-5 7-5 7z"/></svg></div>
+            Customer care
+          </button>
+          <button class="chip s" type="button" data-prompt="What are your enterprise pricing options and discount tiers?">
+            <div class="chip-icon" aria-hidden="true"><svg viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="9" rx="1"/><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><line x1="8" y1="8" x2="8" y2="10"/></svg></div>
+            Pricing
+          </button>
+          <button class="chip t" type="button" data-prompt="How do I reset my API key in the dashboard?">
+            <div class="chip-icon" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="6" cy="9" r="3"/><path d="M8.5 6.5L14 1"/><path d="M12 3l1 1"/></svg></div>
+            Account help
+          </button>
+          <button class="chip c" type="button" data-prompt="I've been a customer for 2 years and I feel undervalued.">
+            <div class="chip-icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2 12l3-3 2 2 6-7"/></svg></div>
+            Retention
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+      
+      <div class="sidebar-section">
+        <div class="sidebar-label">Routing Trace</div>
+        <div class="trace-scroll" id="trace-container">
+          <span style="color:var(--muted2); font-size:11px; padding:0 6px;">Waiting for payload...</span>
+        </div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-stats">
+        <div class="stat-row"><span>Messages</span><span id="stat-msgs">0</span></div>
+        <div class="stat-row"><span>Avg Conf.</span><span id="stat-conf">–%</span></div>
+        <div class="stat-row"><span>Agents</span><span>3 active</span></div>
+        <div class="stat-row"><span>Status</span><span><span class="live-dot"></span></span></div>
+      </div>
+    </aside>
+
+    <!-- chat -->
+    <section class="chat-area">
+      <!-- Hook Banner -->
+      <div class="hero-banner">
+        <strong>The Problem:</strong> Generic AI chatbots ruin customer trust. <br/> <strong>The Solution:</strong> FlowAI dynamically routes inputs to specialized expert agents in real-time.
+      </div>
+
+      <main id="chat-log" class="chat-log" aria-live="polite" aria-label="Conversation">
+        <div id="empty-state" class="empty">
+          <div class="empty-glyph" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h3>Test the Routing Engine</h3>
+          <p>Choose a prompt on the left to watch FlowAI dynamically shift from Sales to Support to Customer Care.</p>
+        </div>
+      </main>
+
+      <div class="composer">
+        <label class="sr-only" for="user-input">Your message</label>
+        <div class="composer-inner">
+          <input
+            class="composer-input"
+            id="user-input"
+            type="text"
+            placeholder="Ask about pricing, support, refunds…"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button id="send-btn" class="send-btn" type="button">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><line x1="14" y1="2" x2="2" y2="8"/><line x1="14" y1="2" x2="8" y2="14"/><line x1="14" y1="2" x2="2" y2="2"/></svg>
+            <span>Send</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /.body -->
+</div><!-- /.app -->
+
+<script>
+const chatLog   = document.getElementById('chat-log');
+const input     = document.getElementById('user-input');
+const sendBtn   = document.getElementById('send-btn');
+const badge     = document.getElementById('agent-badge');
+const confFill  = document.getElementById('conf-fill');
+const confNum   = document.getElementById('conf-num');
+const emptyEl   = document.getElementById('empty-state');
+const chips     = document.querySelectorAll('#chip-list .chip');
+const traceContainer = document.getElementById('trace-container');
+const statMsgs  = document.getElementById('stat-msgs');
+const statConf  = document.getElementById('stat-conf');
+
+// Default to local backend, then try to override from frontend/.env
+let API_URL   = window.FLOWAI_API_URL || 'http://localhost:8000/chat';
+let busy = false, typingEl = null;
+
+// Telemetry State
+let telemetry = { count: 0, confSum: 0, trace: [] };
+
+/* helpers */
+function ts() {
+  return new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+function scrollBot() { chatLog.scrollTop = chatLog.scrollHeight; }
+function md(t) {
+  return window.marked?.parse?.(t, { breaks: true }) ||
+    t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+function intentClass(raw) {
+  const s = (raw || '').toUpperCase();
+  if (s.includes('SALE')) return 'sales';
+  if (s.includes('CARE')) return 'care';
+  if (s.includes('ESCALATE')) return 'care'; // Let's use the Care colors for escalation
+  return 'support';
+}
+
+function intentLabel(raw) {
+  const s = (raw || '').toUpperCase();
+  if (s.includes('SALE')) return 'Sales agent';
+  if (s.includes('CARE')) return 'Customer Care';
+  if (s.includes('ESCALATE')) return 'Human Agent'; // <--- Add this line!
+  return 'Support agent';
+}
+
+function parseEnv(text) {
+  const values = {};
+  text.split(/\r?\n/).forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return;
+    const eq = trimmed.indexOf('=');
+    if (eq === -1) return;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    values[key] = value;
+  });
+  return values;
+}
+
+async function loadFrontendEnv() {
+  try {
+    const response = await fetch('./.env', { cache: 'no-store' });
+    if (!response.ok) return;
+    const envText = await response.text();
+    const env = parseEnv(envText);
+    if (env.FLOWAI_API_URL) {
+      API_URL = env.FLOWAI_API_URL;
+    }
+  } catch {
+    // Fallback to the default localhost URL when opened directly or when .env is unavailable.
+  }
+}
+
+/* state */
+function setBusy(v) {
+  busy = v;
+  input.disabled = v;
+  sendBtn.disabled = v;
+  sendBtn.innerHTML = v
+    ? `<svg viewBox="0 0 16 16" aria-hidden="true" width="15" height="15" style="animation:spin .8s linear infinite"><path d="M8 2a6 6 0 1 0 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Sending</span>`
+    : `<svg viewBox="0 0 16 16" aria-hidden="true" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="14" y1="2" x2="2" y2="8"/><line x1="14" y1="2" x2="8" y2="14"/><line x1="14" y1="2" x2="2" y2="2"/></svg><span>Send</span>`;
+  chips.forEach(c => c.disabled = v);
+}
+
+function updateTelemetry(intent, conf) {
+  if (!intent) return;
+  
+  const cls = intentClass(intent);
+  const shortLbl = intentLabel(intent).split(' ')[0]; // Gets "Sales", "Support", "Customer"
+  const safeConf = Number.isFinite(conf) ? Math.max(0, Math.min(100, conf)) : 0;
+  
+  telemetry.count++;
+  telemetry.confSum += safeConf;
+  telemetry.trace.push({ cls, shortLbl });
+
+  // Update Stats UI
+  statMsgs.textContent = telemetry.count;
+  statConf.textContent = Math.round(telemetry.confSum / telemetry.count) + '%';
+
+  // Render Trace Breadcrumbs
+  traceContainer.innerHTML = '';
+  telemetry.trace.forEach((item, i) => {
+    const tag = document.createElement('div');
+    tag.className = 'agent-tag ' + item.cls;
+    tag.textContent = item.shortLbl;
+    traceContainer.appendChild(tag);
+
+    if (i < telemetry.trace.length - 1) {
+      const arr = document.createElement('div');
+      arr.className = 'trace-arrow';
+      arr.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+      traceContainer.appendChild(arr);
+    }
+  });
+  traceContainer.scrollLeft = traceContainer.scrollWidth;
+}
+
+function updateUI(intent, conf) {
+  if(!intent) return;
+  const cls = intentClass(intent);
+  badge.className = 'badge ' + cls;
+  badge.innerHTML = `<span class="dot"></span>${intentLabel(intent)}`;
+  const pct = Number.isFinite(conf) ? Math.max(0, Math.min(100, conf)) : 0;
+  confFill.style.width = pct + '%';
+  confNum.textContent = pct + '%';
+}
+
+/* messages */
+function addMsg(text, role, intentRaw) {
+  emptyEl.style.display = 'none';
+  const art = document.createElement('article');
+  art.className = 'msg ' + role;
+
+  const av = document.createElement('div');
+  av.className = 'av ' + role;
+  av.textContent = role === 'user' ? 'You' : 'AI';
+
+  const bw = document.createElement('div');
+  bw.className = 'bubble-wrap';
+
+  if (role === 'bot' && intentRaw) {
+    const tag = document.createElement('div');
+    tag.className = 'agent-tag ' + intentClass(intentRaw);
+    tag.textContent = intentLabel(intentRaw);
+    bw.appendChild(tag);
+  }
+
+  const bub = document.createElement('div');
+  bub.className = 'bubble';
+  bub.innerHTML = md(text);
+
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  meta.textContent = ts();
+
+  bw.appendChild(bub);
+  bw.appendChild(meta);
+  art.appendChild(av);
+  art.appendChild(bw);
+  chatLog.appendChild(art);
+  scrollBot();
+}
+
+function showTyping() {
+  const art = document.createElement('article');
+  art.className = 'msg bot';
+  art.id = 'typing-ind';
+  const av = document.createElement('div');
+  av.className = 'av bot'; av.textContent = 'AI';
+  const bw = document.createElement('div'); bw.className = 'bubble-wrap';
+  const bub = document.createElement('div'); bub.className = 'bubble';
+  bub.innerHTML = '<div class="typing-dots" aria-label="Typing"><span></span><span></span><span></span></div>';
+  bw.appendChild(bub); art.appendChild(av); art.appendChild(bw);
+  chatLog.appendChild(art); typingEl = art; scrollBot();
+}
+function hideTyping() { typingEl?.remove(); typingEl = null; }
+
+/* send */
+async function send(override) {
+  if (busy) return;
+  const text = (override || input.value).trim();
+  if (!text) return;
+  addMsg(text, 'user');
+  input.value = '';
+  setBusy(true); showTyping();
+  try {
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text })
+    });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    hideTyping();
+    addMsg(d.reply || 'No response returned.', 'bot', d.intent);
+    updateUI(d.intent, d.confidence);
+    updateTelemetry(d.intent, d.confidence);
+  } catch {
+    hideTyping();
+    addMsg('Could not reach the backend. Make sure the FastAPI server is running on **port 8000**.', 'bot', null);
+    updateUI(null, 0);
+  } finally {
+    setBusy(false); input.focus();
+  }
+}
+
+/* events */
+sendBtn.addEventListener('click', () => send());
+input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+chips.forEach(c => c.addEventListener('click', () => send(c.dataset.prompt)));
+
+/* spin keyframe for loading icon */
+const style = document.createElement('style');
+style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+document.head.appendChild(style);
+
+loadFrontendEnv().finally(() => input.focus());
+</script>
+</body>
+</html>
