@@ -349,6 +349,20 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 
       <div class="sidebar-divider"></div>
 
+      <div class="sidebar-section" style="padding-top:5px;">
+        <a
+          href="https://github.com/immanuel-thomas-j/Flowai"
+          target="_blank"
+          rel="noreferrer"
+          style="display:flex;align-items:center;gap:8px;color:var(--muted);text-decoration:none;font-size:11px;font-weight:500;padding:6px;border-radius:var(--r-sm);transition:background 0.2s;"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+          </svg>
+          View Architecture Docs
+        </a>
+      </div>
+
       <div class="sidebar-stats">
         <div class="stat-row"><span>Messages</span><span id="stat-msgs">0</span></div>
         <div class="stat-row"><span>Avg Conf.</span><span id="stat-conf">–%</span></div>
@@ -369,8 +383,9 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
           <div class="empty-glyph" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           </div>
-          <h3>Test the Routing Engine</h3>
-          <p>Choose a prompt on the left to watch FlowAI dynamically shift from Sales to Support to Customer Care.</p>
+          <h3>FlowAI Routing Engine</h3>
+          <p>Unlike standard single-prompt bots, FlowAI uses a two-node LLM architecture. It classifies your intent in real time and routes your message to a specialized Sales, Support, or Care agent.</p>
+          <p style="margin-top:12px;font-size:11.5px;color:var(--purple);">Select a prompt on the left to watch the routing trace.</p>
         </div>
       </main>
 
